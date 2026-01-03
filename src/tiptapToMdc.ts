@@ -9,10 +9,11 @@ import { visit } from 'unist-util-visit'
 import { getEmojiUnicode } from './emoji'
 import { cleanSpanProps, normalizeProps } from './utils'
 
-type TiptapToMDCMap = Record<string, (node: JSONContent) => MDCRoot | MDCNode | MDCNode[]>
+export type TiptapToMDCMap = Record<string, (node: JSONContent) => MDCRoot | MDCNode | MDCNode[]>
 
 interface TiptapToMDCOptions {
   highlightTheme?: SyntaxHighlightTheme
+  tiptapToMDCMap?: TiptapToMDCMap
 }
 
 const markToTag: Record<string, string> = {
@@ -22,8 +23,8 @@ const markToTag: Record<string, string> = {
   code: 'code',
 }
 
-const tiptapToMDCMap: TiptapToMDCMap = {
-  'doc': (node: JSONContent) => ({ type: 'root', children: (node.content || []).flatMap(tiptapNodeToMDC) } as MDCRoot),
+const defaultTiptapToMDCMap: TiptapToMDCMap = {
+  'doc': (node: JSONContent) => ({ type: 'root', children: (node.content || []).flatMap((child) => tiptapNodeToMDC(child)) } as MDCRoot),
   'element': createElement,
   'inline-element': createElement,
   'span-style': (node: JSONContent) => createElement(node, 'span', { props: cleanSpanProps(node.attrs as Record<string, unknown>) }),
@@ -91,14 +92,14 @@ export async function tiptapToMdc(node: JSONContent, options?: TiptapToMDCOption
     }
   }
 
-  mdc.body = tiptapNodeToMDC(nodeCopy) as MDCRoot
+  mdc.body = tiptapNodeToMDC(nodeCopy, options?.tiptapToMDCMap) as MDCRoot
 
   await applyShikiSyntaxHighlighting(mdc.body, options?.highlightTheme)
 
   return mdc
 }
 
-export function tiptapNodeToMDC(node: JSONContent): MDCRoot | MDCNode | MDCNode[] {
+export function tiptapNodeToMDC(node: JSONContent, tiptapToMDCMap?: TiptapToMDCMap): MDCRoot | MDCNode | MDCNode[] {
   // New list items create an undefined node, so we need to handle it
   if (!node) {
     return {
@@ -109,8 +110,13 @@ export function tiptapNodeToMDC(node: JSONContent): MDCRoot | MDCNode | MDCNode[
     }
   }
 
-  if (tiptapToMDCMap[node.type!]) {
-    return tiptapToMDCMap[node.type!](node)
+  const nodes = {
+    ...tiptapToMDCMap,
+    ...(defaultTiptapToMDCMap || {}),
+  }
+
+  if (nodes[node.type!]) {
+    return nodes[node.type!](node)
   }
 
   if (node.type === 'emoji') {
@@ -134,7 +140,7 @@ export function tiptapNodeToMDC(node: JSONContent): MDCRoot | MDCNode | MDCNode[
  *********************** Create element methods ****************
  ***************************************************************/
 
-function createElement(node: JSONContent, tag?: string, extra: unknown = {}): MDCElement {
+export function createElement(node: JSONContent, tag?: string, extra: unknown = {}): MDCElement {
   const { props = {}, ...rest } = extra as { props: object }
   let children = node.content || []
 
@@ -170,7 +176,7 @@ function createElement(node: JSONContent, tag?: string, extra: unknown = {}): MD
   return {
     type: 'element',
     tag: tag || node.attrs?.tag,
-    children: node.children || children.flatMap(tiptapNodeToMDC),
+    children: node.children || children.flatMap((child) => tiptapNodeToMDC(child)),
     ...rest,
     props: Object.fromEntries(propsArray),
   }
@@ -249,12 +255,12 @@ export function createParagraphElement(node: JSONContent, propsArray: string[][]
       return {
         type: 'element',
         tag: markToTag[block.mark.type],
-        children: block.content.flatMap(tiptapNodeToMDC),
+        children: block.content.flatMap((child) => tiptapNodeToMDC(child)),
         ...props,
       }
     }
 
-    return block.content.flatMap(tiptapNodeToMDC)
+    return block.content.flatMap((child) => tiptapNodeToMDC(child))
   }) as MDCElement[]
 
   const mergedChildren = mergeSiblingsWithSameTag(children.flat(), Object.values(markToTag))
@@ -335,8 +341,8 @@ function createTextElement(node: JSONContent): MDCText | MDCText[] {
   }
 
   const res = node.marks!.reduce((acc: MDCText, mark: Record<string, unknown>) => {
-    if (tiptapToMDCMap[mark.type as string]) {
-      return tiptapToMDCMap[mark.type as string]({ ...mark, children: [acc] }) as MDCText
+    if (defaultTiptapToMDCMap[mark.type as string]) {
+      return defaultTiptapToMDCMap[mark.type as string]({ ...mark, children: [acc] }) as MDCText
     }
     return acc
   }, { type: 'text', value: text })

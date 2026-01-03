@@ -3,7 +3,11 @@ import type { JSONContent } from '@tiptap/vue-3'
 import { EMOJI_REGEXP, getEmojiUnicode } from './emoji'
 import { isEmpty, isValidAttr } from './utils'
 
-type MDCToTipTapMap = Record<string, (node: MDCRoot | MDCNode) => JSONContent>
+export type MDCToTipTapMap = Record<string, (node: MDCRoot | MDCNode) => JSONContent>
+
+export interface MDCToTiptapOptions {
+  mdcToTiptapMap?: MDCToTipTapMap
+}
 
 const tagToMark: Record<string, string> = {
   strong: 'bold',
@@ -13,7 +17,7 @@ const tagToMark: Record<string, string> = {
   a: 'link',
 }
 
-const mdcToTiptapMap: MDCToTipTapMap = {
+const defaultMDCToTiptapMap: MDCToTipTapMap = {
   ...Object.fromEntries(Object.entries(tagToMark).map(([key, value]) => [key, (node) => createMark(node as MDCNode, value)])),
   root: (node) => ({ type: 'doc', content: ((node as MDCElement).children || []).flatMap((child) => mdcNodeToTiptap(child, node as MDCNode)) }),
   text: (node) => createTextNode(node as MDCText),
@@ -38,24 +42,18 @@ const mdcToTiptapMap: MDCToTipTapMap = {
   hr: (node) => createTipTapNode(node as MDCElement, 'horizontalRule'),
 }
 
-export function mdcToTiptap(body: MDCRoot, frontmatter: Record<string, unknown>) {
+export function mdcToTiptap(body: MDCRoot, options?: MDCToTiptapOptions) {
   // Remove invalid text node which added by table syntax
   body.children = (body.children || []).filter((child) => child.type !== 'text')
 
-  const tree = mdcNodeToTiptap(body)
+  const tree = mdcNodeToTiptap(body, undefined, options?.mdcToTiptapMap)
 
-  tree.content = [
-    {
-      type: 'frontmatter',
-      attrs: { frontmatter },
-    },
-    ...((isEmpty(tree.content) ? [{ type: 'paragraph', content: [] }] : tree.content) as JSONContent[]),
-  ]
+  tree.content = (isEmpty(tree.content) ? [{ type: 'paragraph', content: [] }] : tree.content) as JSONContent[]
 
   return tree
 }
 
-export function mdcNodeToTiptap(node: MDCRoot | MDCNode, parent?: MDCNode): JSONContent {
+export function mdcNodeToTiptap(node: MDCRoot | MDCNode, parent?: MDCNode, mdcToTiptapMap?: MDCToTipTapMap): JSONContent {
   const type = node.type === 'element' ? node.tag! : node.type
 
   // Remove duplicate boolean props
@@ -66,11 +64,13 @@ export function mdcNodeToTiptap(node: MDCRoot | MDCNode, parent?: MDCNode): JSON
   //   }
   // })
 
-  /**
-   * Known ndoe types
-   */
-  if (mdcToTiptapMap[type]) {
-    return mdcToTiptapMap[type](node)
+  const nodes = {
+    ...mdcToTiptapMap,
+    ...(defaultMDCToTiptapMap || {}),
+  }
+
+  if (nodes[type]) {
+    return nodes[type](node)
   }
 
   /**
@@ -178,7 +178,7 @@ export function createMark(node: MDCNode, mark: string, accumulatedMarks: { type
   }).flat()
 }
 
-function createTipTapNode(node: MDCElement, type: string, extra: Record<string, unknown> = {}) {
+export function createTipTapNode(node: MDCElement, type: string, extra: Record<string, unknown> = {}) {
   const { attrs = {}, children, ...rest } = extra
   const cleanProps = Object.entries({ ...((attrs as Record<string, unknown>).props as Record<string, unknown> || {}), ...(node.props || {}) })
     .map(([key, value]) => {
@@ -258,7 +258,7 @@ function createPreNode(node: MDCElement) {
 function createParagraphNode(node: MDCElement) {
   // If all children are images, do not create a paragraph
   if (node.children?.length && node.children?.every((child) => (child as MDCElement).tag === 'img')) {
-    return node.children?.map((child) => mdcToTiptapMap.img(child))
+    return node.children?.map((child) => defaultMDCToTiptapMap.img(child))
   }
 
   node.children = node.children?.filter((child) => !(child.type === 'text' && !child.value)) || []

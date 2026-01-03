@@ -1,20 +1,28 @@
 import type { JSONContent } from '@tiptap/vue-3'
+import type { MDCToTipTapMap } from './mdcToTiptap'
+import type { TiptapToMDCMap } from './tiptapToMdc'
+import type { SyntaxHighlightTheme } from './types'
 import { parseMarkdown, stringifyMarkdown } from '@nuxtjs/mdc/runtime'
 import { mdcToTiptap } from './mdcToTiptap'
 import { tiptapToMdc } from './tiptapToMdc'
 
-export async function tiptapToMarkdown(node: JSONContent): Promise<string | null> {
-  const mdc = await tiptapToMdc(node)
+interface MarkdownToTiptapOptions {
+  tiptapToMDCMap?: TiptapToMDCMap
+  highlightTheme?: SyntaxHighlightTheme
+}
+
+interface TiptapToMarkdownOptions {
+  mdcToTiptapMap?: MDCToTipTapMap
+}
+
+export async function tiptapToMarkdown(node: JSONContent, options?: MarkdownToTiptapOptions): Promise<string | null> {
+  const mdc = await tiptapToMdc(node, options)
 
   return stringifyMarkdown(mdc.body, mdc.data)
 }
 
-export async function markdownToTiptap(markdown: string): Promise<JSONContent> {
+export async function markdownToTiptap(markdown: string, options?: TiptapToMarkdownOptions): Promise<JSONContent> {
   const mdc = await parseMarkdown(markdown)
-  const tiptap = mdcToTiptap(mdc.body, {})
 
-  return {
-    type: 'doc',
-    content: tiptap.content?.filter((child) => child.type !== 'frontmatter'),
-  }
+  return mdcToTiptap(mdc.body, options)
 }
