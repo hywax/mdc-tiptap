@@ -11,6 +11,10 @@ export async function tiptapToMarkdown(node: JSONContent): Promise<string | null
 
 export async function markdownToTiptap(markdown: string): Promise<JSONContent> {
   const mdc = await parseMarkdown(markdown)
+  const tiptap = mdcToTiptap(mdc.body, {})
 
-  return mdcToTiptap(mdc.body, {})
+  return {
+    type: 'doc',
+    content: tiptap.content?.filter((child) => child.type !== 'frontmatter'),
+  }
 }
