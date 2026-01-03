@@ -1,28 +1,31 @@
 import type { JSONContent } from '@tiptap/vue-3'
-import type { MDCToTipTapMap } from './mdcToTiptap'
-import type { TiptapToMDCMap } from './tiptapToMdc'
-import type { SyntaxHighlightTheme } from './types'
+import type { MDCToTiptapOptions } from './mdcToTiptap'
+import type { TiptapToMDCMapOptions } from './tiptapToMdc'
 import { parseMarkdown, stringifyMarkdown } from '@nuxtjs/mdc/runtime'
-import { mdcToTiptap } from './mdcToTiptap'
-import { tiptapToMdc } from './tiptapToMdc'
+import { createMDCToTiptap } from './mdcToTiptap'
+import { createTiptapToMDC } from './tiptapToMdc'
 
-interface MarkdownToTiptapOptions {
-  tiptapToMDCMap?: TiptapToMDCMap
-  highlightTheme?: SyntaxHighlightTheme
+export interface MarkdownOptions {
+  mdcToTiptap?: MDCToTiptapOptions
+  tiptapToMDC?: TiptapToMDCMapOptions
 }
 
-interface TiptapToMarkdownOptions {
-  mdcToTiptapMap?: MDCToTipTapMap
-}
+export function createMarkdown(options?: MarkdownOptions) {
+  const mdcToTiptap = createMDCToTiptap(options?.mdcToTiptap)
+  const tiptapToMDC = createTiptapToMDC(options?.tiptapToMDC)
 
-export async function tiptapToMarkdown(node: JSONContent, options?: MarkdownToTiptapOptions): Promise<string | null> {
-  const mdc = await tiptapToMdc(node, options)
+  async function tiptapToMarkdown(node: JSONContent): Promise<string | null> {
+    const mdc = await tiptapToMDC.tiptapToMdc(node)
+    return stringifyMarkdown(mdc.body, mdc.data)
+  }
 
-  return stringifyMarkdown(mdc.body, mdc.data)
-}
+  async function markdownToTiptap(markdown: string): Promise<JSONContent> {
+    const mdc = await parseMarkdown(markdown)
+    return mdcToTiptap.mdcToTiptap(mdc.body)
+  }
 
-export async function markdownToTiptap(markdown: string, options?: TiptapToMarkdownOptions): Promise<JSONContent> {
-  const mdc = await parseMarkdown(markdown)
-
-  return mdcToTiptap(mdc.body, options)
+  return {
+    tiptapToMarkdown,
+    markdownToTiptap,
+  }
 }

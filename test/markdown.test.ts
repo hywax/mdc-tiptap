@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { markdownToTiptap, tiptapToMarkdown } from '../src'
+import { createMarkdown } from '../src'
 
 async function processMarkdown(input: string) {
+  const { tiptapToMarkdown, markdownToTiptap } = createMarkdown()
   const doc = await markdownToTiptap(input)
   const output = await tiptapToMarkdown(doc)
 
