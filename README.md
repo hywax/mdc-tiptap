@@ -28,15 +28,15 @@ npm install @hywax/mdc-tiptap -D
 ```ts
 import { mdcToTiptap } from '@hywax/mdc-tiptap'
 
-const mdc = await parseMarkdown(markdown) // AST MDC
+const tiptap = await mdcToTiptap(markdown) // AST Tiptap
 ```
 
-### `mdcNodeToTiptap`
+### `tiptapToMdc`
 
 ```ts
-import { mdcNodeToTiptap } from '@hywax/mdc-tiptap'
+import { tiptapToMdc } from '@hywax/mdc-tiptap'
 
-const tiptap = mdcNodeToTiptap(mdc) // AST Tiptap
+const mdc = await tiptapToMdc(tiptap) // AST MDC
 ```
 ### `tiptapToMarkdown`
 
