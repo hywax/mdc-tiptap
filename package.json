@@ -1,0 +1,64 @@
+{
+  "name": "@hywax/mdc-tiptap",
+  "type": "module",
+  "version": "0.0.0",
+  "packageManager": "pnpm@10.11.1",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hywax/mdc-tiptap.git"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "release": "pnpm build && changelogen --release --push && pnpm publish --access public",
+    "build": "unbuild",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "test:deps": "madge --circular --extensions ts ./src",
+    "test": "vitest --run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit --skipLibCheck",
+    "prepare": "husky"
+  },
+  "dependencies": {
+    "@nuxtjs/mdc": "^0.19.2",
+    "@tiptap/vue-3": "^3.14.0",
+    "@types/mdast": "^4.0.4",
+    "github-slugger": "^2.0.0",
+    "mdast-util-find-and-replace": "^3.0.2",
+    "shiki": "^3.20.0",
+    "unist-util-visit": "^5.0.0"
+  },
+  "devDependencies": {
+    "@antfu/eslint-config": "^4.13.2",
+    "@commitlint/cli": "^19.8.0",
+    "@commitlint/config-conventional": "^19.8.0",
+    "changelogen": "^0.6.1",
+    "eslint": "^9.28.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.0.0",
+    "madge": "^8.0.0",
+    "typescript": "^5.8.2",
+    "unbuild": "^3.5.0",
+    "vitest": "^4.0.16"
+  },
+  "lint-staged": {
+    "*.ts": "pnpm run lint"
+  },
+  "commitlint": {
+    "extends": [
+      "@commitlint/config-conventional"
+    ]
+  }
+}
