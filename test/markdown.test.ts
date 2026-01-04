@@ -94,7 +94,9 @@ This is a code block
 test
 ::
 
-:custom-component{alt="alt text" image="link to image" lqip="data:image/jpeg;base64,/9j/2wBDAA0JCgsKCA0LCgsODg0PEyAVExISEyccHhcgLikxMC4pLSwzOko+MzZGNywtQFdBRkxOUlNSMj5aYVpQYEpRUk//2wBDAQ4ODhMREyYVFSZPNS01T09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0//wAARCAANABQDASIAAhEBAxEB/8QAGAAAAgMAAAAAAAAAAAAAAAAAAAMBAgb/xAAXEAEBAQEAAAAAAAAAAAAAAAAAEQES/8QAFgEBAQEAAAAAAAAAAAAAAAAAAgAB/8QAFREBAQAAAAAAAAAAAAAAAAAAABH/2gAMAwEAAhEDEQA/AMXyIZEbgUi4FoG1P//Z"}
+:custom-component{alt="alt text" color="#000" image="link to image"}
+
+:custom-component{color="#000" image="link to image"}
 `.trimStart()
 
     await processMarkdown(input)

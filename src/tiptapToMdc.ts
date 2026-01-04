@@ -9,7 +9,9 @@ import { visit } from 'unist-util-visit'
 import { getEmojiUnicode } from './emoji'
 import { cleanSpanProps, normalizeProps } from './utils'
 
-export type TiptapToMDCMap = Record<string, (node: JSONContent) => MDCRoot | MDCNode | MDCNode[]>
+export type ToMDCNode = (node: JSONContent) => MDCRoot | MDCNode | MDCNode[]
+
+export type TiptapToMDCMap = Record<string, ToMDCNode>
 
 export interface TiptapToMDCMapOptions {
   customMap?: TiptapToMDCMap

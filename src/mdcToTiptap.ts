@@ -3,7 +3,9 @@ import type { JSONContent } from '@tiptap/vue-3'
 import { EMOJI_REGEXP, getEmojiUnicode } from './emoji'
 import { isEmpty, isValidAttr } from './utils'
 
-export type MDCToTipTapMap = Record<string, (node: MDCRoot | MDCNode) => JSONContent>
+export type ToTipTapNode = (node: MDCRoot | MDCNode) => JSONContent
+
+export type MDCToTipTapMap = Record<string, ToTipTapNode>
 
 export interface MDCToTiptapOptions {
   customMap?: MDCToTipTapMap
@@ -61,12 +63,12 @@ export function createMDCToTiptap(options?: MDCToTiptapOptions) {
     const type = node.type === 'element' ? node.tag! : node.type
 
     // Remove duplicate boolean props
-    // Object.entries((node as MDCElement).props || {}).forEach(([key, value]) => {
-    //   if (key.startsWith(':') && value === 'true') {
-    //     const propKey = key.replace(/^:/, '')
-    //     Reflect.deleteProperty((node as MDCElement).props!, propKey)
-    //   }
-    // })
+    Object.entries((node as MDCElement).props || {}).forEach(([key, value]) => {
+      if (key.startsWith(':') && value === 'true') {
+        const propKey = key.replace(/^:/, '')
+        Reflect.deleteProperty((node as MDCElement).props!, propKey)
+      }
+    })
 
     /**
      * Known ndoe types
