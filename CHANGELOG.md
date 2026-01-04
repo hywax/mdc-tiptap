@@ -1,6 +1,18 @@
 # Changelog
 
 
+## v0.1.1
+
+[compare changes](https://github.com/hywax/mdc-tiptap/compare/v0.1.0...v0.1.1)
+
+### 💅 Refactors
+
+- Update type definitions for MDC to Tiptap and Tiptap to MDC mappings ([71e806b](https://github.com/hywax/mdc-tiptap/commit/71e806b))
+
+### ❤️ Contributors
+
+- Hywax <a.hywax@gmail.com>
+
 ## v0.1.0
 
 [compare changes](https://github.com/hywax/mdc-tiptap/compare/v0.0.2...v0.1.0)
